@@ -17,7 +17,7 @@ for updated documentation check out my [medium](https://medium.com/@ssnetanel/bu
 This setup is relaying on cloud-init images.
 
 Using cloud-init image save us a lot of time and it's work great!
-I use ubuntu focal image, you can use whatever distro you like.
+I use ubuntu jammy image, you can use whatever distro you like.
 
 to configure the cloud-init image you will need to connect to a Linux server and run the following:
 
@@ -33,39 +33,39 @@ for Debian, got to <https://cloud.debian.org/images/cloud/>.
 it can also work for centos (R.I.P)
 
 ```bash
-wget https://cloud-images.ubuntu.com/focal/current/focal-server-cloudimg-amd64.img
+wget https://cloud-images.ubuntu.com/jammy/current/current/jammy-server-cloudimg-amd64.img
 ```
 
 update the image and install Proxmox agent - this is a must if we want terraform to work properly.
 it can take a minute to add the package to the image.
 
 ```bash
-virt-customize focal-server-cloudimg-amd64.img --install qemu-guest-agent
+virt-customize jammy-template-amd64.img --install qemu-guest-agent
 ```
 
 now that we have the image, we need to move it to the Proxmox server.
 we can do that by using `scp`
 
 ```bash
-scp focal-server-cloudimg-amd64.img Proxmox_username@Proxmox_host:/path_on_Proxmox/focal-server-cloudimg-amd64.img
+scp jammy-server-cloudimg-amd64.img Proxmox_username@Proxmox_host:/path_on_Proxmox/jammy-server-cloudimg-amd64.img
 ```
 
 so now we should have the image configured and on our Proxmox server. let's start creating the VM
 
 ```bash
-qm create 9000 --name "ubuntu-focal-cloudinit-template" --memory 2048 --net0 virtio,bridge=vmbr0
+qm create 9000 --name "jammy-template" --memory 2048 --net0 virtio,bridge=vmbr0
 ```
 
 for ubuntu images, rename the image suffix
 
 ```bash
-mv focal-server-cloudimg-amd64.img focal-server-cloudimg-amd64.qcow2
+mv jammy-template-amd64.img jammy-template-amd64.qcow2
 ```
 
 import the disk to the VM
 
 ```bash
-qm importdisk 9000 focal-server-cloudimg-amd64.qcow2 local-lvm
+qm importdisk 9000 jammy-template-amd64.qcow2 local-lvm
 ```
 
 configure the VM to use the new image
@@ -137,13 +137,13 @@ after you run the Terrafom file, your file should look like this:
 
 ```bash
 [master]
-192.168.3.200 Ansible_ssh_private_key_file=~/.ssh/proxk3s
+192.168.1.200 Ansible_ssh_private_key_file=~/.ssh/proxk3s
 
 [node]
-192.168.3.202 Ansible_ssh_private_key_file=~/.ssh/proxk3s
-192.168.3.201 Ansible_ssh_private_key_file=~/.ssh/proxk3s
-192.168.3.198 Ansible_ssh_private_key_file=~/.ssh/proxk3s
-192.168.3.203 Ansible_ssh_private_key_file=~/.ssh/proxk3s
+192.168.1.201 Ansible_ssh_private_key_file=~/.ssh/proxk3s
+192.168.1.202 Ansible_ssh_private_key_file=~/.ssh/proxk3s
+192.168.1.203 Ansible_ssh_private_key_file=~/.ssh/proxk3s
+192.168.1.204 Ansible_ssh_private_key_file=~/.ssh/proxk3s
 
 [k3s_cluster:children]
 master
